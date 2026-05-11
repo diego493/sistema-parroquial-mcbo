@@ -1,6 +1,7 @@
 {
   "name": "sistema-parroquial-mcbo",
   "version": "1.0.0",
+  "private": true,
   "scripts": {
     "install:all": "cd server && npm install && npx prisma generate --schema=../schema.prisma",
     "start": "cd server && npm start"
