@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RolSistema {
+  SUPREMO
+  ADMINISTRADOR
+  COORDINADOR_PARROQUIAL
+}
+
+enum CargoParroquial {
+  COORDINADOR_PARROQUIAL
+  COORDINADOR_ORGANIZACION
+  COORDINADOR_COMUNICACIONES
+  SECRETARIO_POLITICO_1
+  SECRETARIO_POLITICO_2
+  AFILIADO
+}
+
+model Usuario {
+  id        String     @id @default(cuid())
+  cedula    String     @unique
+  email     String     @unique
+  password  String     
+  nombre    String
+  rol       RolSistema @default(COORDINADOR_PARROQUIAL)
+  parroquia String?    // Solo para coordinadores
+}
+
+model DirectivaMunicipal {
+  id                         String   @id @default("unica_directiva")
+  coordinador_juvenil        String?
+  organizacion_juvenil       String?
+  comunicaciones_juvenil     String?
+  secretario_politico_1      String?
+  secretario_politico_2      String?
+  ultima_actualizacion       DateTime @updatedAt
+}
+
+model MiembroParroquial {
+  id               String   @id @default(cuid())
+  cedula           String   @unique
+  nombres          String
+  apellidos        String
+  telefono         String
+  parroquia        String   
+  cargo            CargoParroquial
+  estaInscritoCNE  Boolean  @default(false)
+  centroVotacion   String?  
+  registradoPor    String   
+  createdAt        DateTime @default(now())
+}
