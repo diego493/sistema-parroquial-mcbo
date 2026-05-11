@@ -2,7 +2,7 @@
   "name": "sistema-parroquial-mcbo",
   "version": "1.0.0",
   "scripts": {
-    "install:all": "cd server && npm install && cd ../client && npm install",
+    "install:all": "cd server && npm install",
     "start": "cd server && npm start"
   }
 }
