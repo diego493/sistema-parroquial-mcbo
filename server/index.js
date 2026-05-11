@@ -9,38 +9,37 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use(express.json());
 
-// RUTA PARA REGISTRAR UN MIEMBRO (Manual)
+// RUTA: Registro de Miembros Parroquiales (Manual + Checklist CNE)
 app.post('/api/registrar', async (req, res) => {
     try {
-        const { cedula, nombres, apellidos, telefono, parroquia, cargo, estaInscritoCNE, centroVotacion } = req.body;
+        const { cedula, nombres, apellidos, telefono, parroquia, cargo, estaInscritoCNE, centroVotacion, usuarioId } = req.body;
         
-        const nuevoMiembro = await prisma.persona.create({
+        const nuevo = await prisma.miembroParroquial.create({
             data: {
-                cedula,
-                nombres,
-                apellidos,
-                telefono,
-                parroquia,
-                cargo,
+                cedula, nombres, apellidos, telefono, parroquia, cargo,
                 estaInscritoCNE,
                 centroVotacion: estaInscritoCNE ? centroVotacion : "No inscrito",
-                registradoPor: "Admin-Manual"
+                registradoPor: usuarioId
             }
         });
-        res.status(201).json({ mensaje: "Registro exitoso", data: nuevoMiembro });
-    } catch (error) {
-        res.status(400).json({ error: "Error al registrar: Cédula duplicada o datos faltantes" });
+        res.status(201).json(nuevo);
+    } catch (e) {
+        res.status(400).json({ error: "Cédula duplicada o datos inválidos" });
     }
 });
 
-// RUTA PARA VER EL RESUMEN POR PARROQUIA
-app.get('/api/resumen-parroquias', async (req, res) => {
-    const resumen = await prisma.persona.groupBy({
-        by: ['parroquia'],
-        _count: { _all: true }
+// RUTA: Directiva Municipal (Protegida para Supremo)
+app.post('/api/directiva', async (req, res) => {
+    const { rol, datos } = req.body;
+    if (rol !== 'SUPREMO') return res.status(403).json({ error: "No autorizado" });
+
+    const updated = await prisma.directivaMunicipal.upsert({
+        where: { id: "unica_directiva" },
+        update: datos,
+        create: { id: "unica_directiva", ...datos }
     });
-    res.json(resumen);
+    res.json(updated);
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`Servidor activo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
