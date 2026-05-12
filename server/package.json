@@ -5,9 +5,7 @@
   "scripts": {
     "postinstall": "prisma generate",
     "start": "node index.js",
-    "dev": "nodemon index.js"
-  },
-  "prisma": {
+    "dev": "nodemon index.js",
     "seed": "node prisma/seed.js"
   },
   "dependencies": {
