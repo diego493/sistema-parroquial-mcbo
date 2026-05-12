@@ -1,22 +1,21 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
+
 const prisma = new PrismaClient();
 
 async function main() {
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash('Maracaibo2026!', salt); // <--- TU CONTRASEÑA
+  const hashedPassword = await bcrypt.hash('Maraca600_', 10);
 
   const supremo = await prisma.usuario.upsert({
     where: { email: 'diego@vente.com' },
     update: {},
     create: {
       email: 'diego@vente.com',
-      cedula: '28000330', // Pon tu cédula real aquí
+      cedula: '28000330',
       nombre: 'Diego Velarde',
-      password: Maraca600_,
-      rol: 'SUPREMO',
-      activo: true
-    },
+      password: hashedPassword,
+      rol: 'SUPREMO'
+    }
   });
 
   console.log('✅ Usuario SUPREMO sembrado con éxito:', supremo.email);
