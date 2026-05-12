@@ -7,7 +7,7 @@ async function main() {
   const hashedPassword = await bcrypt.hash('Maracaibo2026!', salt); // <--- TU CONTRASEÑA
 
   const supremo = await prisma.usuario.upsert({
-    where: { email: 'diego@sistema.com' },
+    where: { email: 'diego@vente.com' },
     update: {},
     create: {
       email: 'diego@vente.com',
