@@ -1,179 +1,81 @@
-import { useState } from "react";
-import {
-  Home,
-  Users,
-  FileText,
-  BarChart3,
-  History,
-  Shield
-} from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+// --- COMPONENTES DE VISTA SEGÚN ROL ---
+const DashboardSupremo = () => <div className="p-8"><h1>👑 Panel Global de Maracaibo</h1><p>Control total de las 18 parroquias.</p></div>;
+const DashboardAdmin = () => <div className="p-8"><h1>🛡️ Gestión Administrativa</h1><p>Control de usuarios y logs.</p></div>;
+const DashboardParroquial = () => <div className="p-8"><h1>📍 Gestión de Parroquia</h1><p>Registro local de cuadros.</p></div>;
 
 export default function App() {
-  const [view, setView] = useState("dashboard");
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // 🔵 Sidebar items
-  const menuItems = [
-    { id: "dashboard", label: "Inicio", icon: Home },
-    { id: "status", label: "Status Parroquias", icon: BarChart3 },
-    { id: "create", label: "Crear Registros", icon: FileText },
-    { id: "users", label: "Gestionar Usuarios", icon: Users },
-    { id: "logs", label: "Historial Logs", icon: History }
-  ];
+  // Al cargar, verificamos si hay sesión activa
+  useEffect(() => {
+    const savedToken = localStorage.getItem('token');
+    if (savedToken) {
+      // Aquí podrías validar el token con el backend
+      const decoded = JSON.parse(atob(savedToken.split('.')[1])); 
+      setUser(decoded);
+    }
+    setLoading(false);
+  }, []);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const { email, password } = e.target.elements;
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
+        email: email.value,
+        password: password.value
+      });
+      localStorage.setItem('token', res.data.token);
+      setUser(res.data.user);
+    } catch (err) {
+      alert("Error de autenticación");
+    }
+  };
+
+  if (loading) return <div className="flex h-screen items-center justify-center">Cargando Sistema...</div>;
+
+  if (!user) return (
+    <div className="flex h-screen items-center justify-center bg-slate-900">
+      <form onSubmit={handleLogin} className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl">
+        <h2 className="text-2xl font-black mb-6 text-center">LOGIN GESTIÓN</h2>
+        <input name="email" type="email" placeholder="Email" className="w-full mb-4 p-4 bg-slate-100 rounded-xl" required />
+        <input name="password" type="password" placeholder="Contraseña" className="w-full mb-6 p-4 bg-slate-100 rounded-xl" required />
+        <button className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl">INGRESAR</button>
+      </form>
+    </div>
+  );
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-slate-50">
+      {/* SIDEBAR DINÁMICO */}
+      <nav className="w-64 bg-white border-r p-6">
+        <h2 className="font-black text-blue-600 mb-10">SISTEMA MCBO</h2>
+        <ul className="space-y-2">
+          <li className="font-bold p-3 bg-blue-50 text-blue-600 rounded-xl">Dashboard</li>
+          
+          {/* Solo Supremo ve esto */}
+          {user.role === 'SUPREMO' && (
+            <li className="p-3 text-gray-500 hover:bg-slate-50 rounded-xl cursor-pointer">Configuración Global</li>
+          )}
 
-      {/* SIDEBAR */}
-      <aside className="w-64 bg-gray-900 text-white flex flex-col">
-        <div className="p-4 text-xl font-bold border-b border-gray-700 flex items-center gap-2">
-          <Shield size={20} />
-          Sistema Parroquial
-        </div>
+          {/* Supremo y Admin ven esto */}
+          {['SUPREMO', 'ADMINISTRADOR'].includes(user.role) && (
+            <li className="p-3 text-gray-500 hover:bg-slate-50 rounded-xl cursor-pointer">Gestión de Usuarios</li>
+          )}
 
-        <nav className="flex-1 p-2 space-y-1">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setView(item.id)}
-                className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition ${
-                  view === item.id
-                    ? "bg-blue-600"
-                    : "hover:bg-gray-800"
-                }`}
-              >
-                <Icon size={18} />
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
-      </aside>
+          <li onClick={() => { localStorage.removeItem('token'); setUser(null); }} className="p-3 text-red-500 mt-20 cursor-pointer">Cerrar Sesión</li>
+        </ul>
+      </nav>
 
-      {/* MAIN CONTENT */}
-      <main className="flex-1 p-6 overflow-y-auto">
-
-        {/* DASHBOARD */}
-        {view === "dashboard" && (
-          <div>
-            <h1 className="text-2xl font-bold mb-4">Dashboard Supremo</h1>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white p-4 rounded shadow">
-                <p>Total Registros</p>
-                <h2 className="text-2xl font-bold">128</h2>
-              </div>
-
-              <div className="bg-white p-4 rounded shadow">
-                <p>Inscritos CNE</p>
-                <h2 className="text-2xl font-bold">76%</h2>
-              </div>
-
-              <div className="bg-white p-4 rounded shadow">
-                <p>Parroquias Activas</p>
-                <h2 className="text-2xl font-bold">12</h2>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* STATUS PARROQUIAS */}
-        {view === "status" && (
-          <div>
-            <h1 className="text-2xl font-bold mb-4">Status Parroquias</h1>
-
-            {[
-              { name: "Raúl Leoni", value: 1, total: 5 },
-              { name: "Caricuao", value: 3, total: 5 },
-              { name: "El Valle", value: 5, total: 5 }
-            ].map((p, i) => (
-              <div key={i} className="bg-white p-4 rounded shadow mb-3">
-                <div className="flex justify-between">
-                  <p>{p.name}</p>
-                  <p>{p.value}/{p.total}</p>
-                </div>
-
-                <div className="w-full bg-gray-200 h-2 rounded mt-2">
-                  <div
-                    className="bg-green-500 h-2 rounded"
-                    style={{
-                      width: `${(p.value / p.total) * 100}%`
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* CREAR REGISTROS */}
-        {view === "create" && (
-          <div>
-            <h1 className="text-2xl font-bold mb-4">Crear Registro</h1>
-
-            <div className="bg-white p-4 rounded shadow space-y-3">
-              <input className="w-full p-2 border" placeholder="Cédula" />
-              <input className="w-full p-2 border" placeholder="Nombres" />
-              <input className="w-full p-2 border" placeholder="Apellidos" />
-
-              <button className="bg-blue-600 text-white px-4 py-2 rounded">
-                Guardar
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* USUARIOS */}
-        {view === "users" && (
-          <div>
-            <h1 className="text-2xl font-bold mb-4">Gestión de Usuarios</h1>
-
-            <table className="w-full bg-white shadow rounded overflow-hidden">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="p-2">Nombre</th>
-                  <th className="p-2">Rol</th>
-                  <th className="p-2">Acciones</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {[
-                  { name: "Juan Pérez", role: "ADMIN" },
-                  { name: "Ana López", role: "AFILIADO" }
-                ].map((u, i) => (
-                  <tr key={i} className="border-t">
-                    <td className="p-2">{u.name}</td>
-                    <td className="p-2">{u.role}</td>
-                    <td className="p-2 flex gap-2">
-                      <button className="bg-yellow-500 px-2 py-1 text-white rounded">
-                        Bloquear
-                      </button>
-                      <button className="bg-red-600 px-2 py-1 text-white rounded">
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* LOGS */}
-        {view === "logs" && (
-          <div>
-            <h1 className="text-2xl font-bold mb-4">Historial de Logs</h1>
-
-            <div className="bg-black text-green-400 p-4 rounded font-mono h-96 overflow-y-auto">
-              <p>[2026-05-11] Usuario ADMIN creó registro</p>
-              <p>[2026-05-11] Nueva directiva actualizada</p>
-              <p>[2026-05-11] Login exitoso SUPREMO</p>
-            </div>
-          </div>
-        )}
-
+      {/* RENDERIZADO POR ROL */}
+      <main className="flex-1">
+        {user.role === 'SUPREMO' && <DashboardSupremo />}
+        {user.role === 'ADMINISTRADOR' && <DashboardAdmin />}
+        {user.role === 'COORDINADOR_PARROQUIAL' && <DashboardParroquial />}
       </main>
     </div>
   );
