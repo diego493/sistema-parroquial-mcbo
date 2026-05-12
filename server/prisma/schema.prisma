@@ -7,12 +7,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Roles para el ACCESO al sistema
 enum RolSistema {
   SUPREMO
   ADMINISTRADOR
   COORDINADOR_PARROQUIAL
 }
 
+// Cargos de las personas registradas en las parroquias
 enum CargoParroquial {
   COORDINADOR_PARROQUIAL
   COORDINADOR_ORGANIZACION
@@ -29,29 +31,40 @@ model Usuario {
   password  String     
   nombre    String
   rol       RolSistema @default(COORDINADOR_PARROQUIAL)
-  parroquia String?    // Solo para coordinadores
+  parroquia String?    // Para saber de qué parroquia es el coordinador
+  activo    Boolean    @default(true) // Para poder BLOQUEAR usuarios
+  createdAt DateTime   @default(now())
 }
 
 model DirectivaMunicipal {
-  id                         String   @id @default("unica_directiva")
-  coordinador_juvenil        String?
-  organizacion_juvenil       String?
-  comunicaciones_juvenil     String?
-  secretario_politico_1      String?
-  secretario_politico_2      String?
-  ultima_actualizacion       DateTime @updatedAt
+  id                      String   @id @default("unica_directiva")
+  coordinador_juvenil     String?
+  organizacion_juvenil    String?
+  comunicaciones_juvenil  String?
+  secretario_politico_1   String?
+  secretario_politico_2   String?
+  ultima_actualizacion    DateTime @updatedAt
 }
 
 model MiembroParroquial {
-  id               String   @id @default(cuid())
-  cedula           String   @unique
-  nombres          String
-  apellidos        String
-  telefono         String
-  parroquia        String   
-  cargo            CargoParroquial
-  estaInscritoCNE  Boolean  @default(false)
-  centroVotacion   String?  
-  registradoPor    String   
-  createdAt        DateTime @default(now())
+  id              String          @id @default(cuid())
+  cedula          String          @unique
+  nombres         String
+  apellidos       String
+  telefono        String
+  parroquia       String   
+  cargo           CargoParroquial
+  estaInscritoCNE Boolean         @default(false)
+  centroVotacion  String?  
+  registradoPor   String   // Guardará el ID del usuario que lo creó
+  createdAt       DateTime        @default(now())
+}
+
+// LA "CAJA NEGRA": Aquí se guardará todo lo que pase en el sistema
+model LogActividad {
+  id        String   @id @default(cuid())
+  usuario   String   // Quién lo hizo
+  accion    String   // Qué hizo (ej: "Creó usuario", "Editó miembro")
+  detalles  String?  // Info extra
+  fecha     DateTime @default(now())
 }
